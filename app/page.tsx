@@ -5,7 +5,7 @@ import VitalBattery from "@/components/ui/VitalBattery";
 import SatietyIndicator from "@/components/ui/SatietyIndicator";
 import SocraticToast from "@/components/ui/SocraticToast";
 import { useAppState } from "@/components/AppProviders";
-import { getUserProfile, getLogsForDate } from "@/lib/db/dexie";
+import { getUserProfile, getLogsForDate, deleteNutritionLog } from "@/lib/db/dexie";
 import { computeNutritionProfile } from "@/lib/nutrition/calculator";
 import type { UserProfile, NutritionLog } from "@/lib/db/types";
 
@@ -24,32 +24,46 @@ export default function DashboardPage() {
   const [todayLogs, setTodayLogs] = useState<NutritionLog[]>([]);
   const [dailyPhrase, setDailyPhrase] = useState(MANIFESTO_PHRASES[0]);
 
-  useEffect(() => {
-    async function loadData() {
-      const p = await getUserProfile();
-      if (p) {
-        setProfile(p);
-      } else {
-        // Fallback profile for dev since we don't have onboarding yet
-        setProfile({
-          id: 1,
-          weight_kg: 60,
-          height_cm: 165,
-          age: 39,
-          pal_coefficient: 1.375,
-          updated_at: new Date().toISOString(),
-        });
-      }
-      const today = new Date().toISOString().split("T")[0];
-      const logs = await getLogsForDate(today);
-      setTodayLogs(logs);
-
-      // Frase del giorno deterministica basata sulla data per evitare mismatch React
-      const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 1000 / 60 / 60 / 24);
-      setDailyPhrase(MANIFESTO_PHRASES[dayOfYear % MANIFESTO_PHRASES.length]);
+  async function loadData() {
+    const p = await getUserProfile();
+    if (p) {
+      setProfile(p);
+    } else {
+      // Fallback profile for dev since we don't have onboarding yet
+      setProfile({
+        id: 1,
+        weight_kg: 60,
+        height_cm: 165,
+        age: 39,
+        pal_coefficient: 1.375,
+        updated_at: new Date().toISOString(),
+      });
     }
+    const today = new Date().toISOString().split("T")[0];
+    const logs = await getLogsForDate(today);
+    setTodayLogs(logs);
+
+    // Frase del giorno deterministica basata sulla data per evitare mismatch React
+    const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 1000 / 60 / 60 / 24);
+    setDailyPhrase(MANIFESTO_PHRASES[dayOfYear % MANIFESTO_PHRASES.length]);
+  }
+
+  useEffect(() => {
     loadData();
   }, []);
+
+  async function handleDeleteLog(id?: number) {
+    console.log("[Dashboard] Attempting to delete log with ID:", id);
+    if (!id) {
+      console.warn("[Dashboard] Missing ID for log deletion");
+      return;
+    }
+    if (confirm("Vuoi eliminare questo pasto?")) {
+      await deleteNutritionLog(id);
+      console.log("[Dashboard] Log deleted, reloading data...");
+      await loadData();
+    }
+  }
 
   if (!profile) return null;
 
@@ -137,8 +151,18 @@ export default function DashboardPage() {
                   <h3 className="font-semibold text-charcoal capitalize">{log.meal_type}</h3>
                   <p className="text-sm text-charcoal-muted">{log.foods.map(f => f.name).join(", ")}</p>
                 </div>
-                <div className="text-right">
+                <div className="text-right flex items-center gap-2">
                   <span className="block font-medium text-sage-dark">{log.total_calories} kcal</span>
+                  <button 
+                    onClick={() => handleDeleteLog(log.id)} 
+                    className="w-11 h-11 flex items-center justify-center text-earth hover:bg-earth/5 active:bg-earth/10 rounded-full transition-colors"
+                    aria-label="Elimina pasto"
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="3 6 5 6 21 6"></polyline>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                  </button>
                 </div>
               </div>
             ))

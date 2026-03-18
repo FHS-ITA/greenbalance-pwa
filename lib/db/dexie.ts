@@ -97,3 +97,22 @@ export async function deleteActivity(id: number): Promise<void> {
     created_at: new Date().toISOString(),
   });
 }
+
+export async function deleteNutritionLog(id: number): Promise<void> {
+  await db.nutrition_logs.delete(id);
+  await db.sync_queue.add({
+    table_name: "nutrition_logs",
+    operation: "delete",
+    payload: { id },
+    created_at: new Date().toISOString(),
+  });
+}
+
+export async function resetEntireProfile(): Promise<void> {
+  await db.transaction('rw', [db.user_profile, db.nutrition_logs, db.activity_logs, db.sync_queue], async () => {
+    await db.user_profile.clear();
+    await db.nutrition_logs.clear();
+    await db.activity_logs.clear();
+    await db.sync_queue.clear();
+  });
+}

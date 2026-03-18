@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getUserProfile, saveUserProfile } from "@/lib/db/dexie";
+import { getUserProfile, saveUserProfile, resetEntireProfile } from "@/lib/db/dexie";
 import { computeNutritionProfile } from "@/lib/nutrition/calculator";
 import type { UserProfile } from "@/lib/db/types";
 
@@ -33,6 +33,14 @@ export default function SettingsPage() {
     await saveUserProfile({ ...profile, updated_at: new Date().toISOString() });
     setIsSaving(false);
     alert("Profilo aggiornato.");
+  };
+
+  const handleReset = async () => {
+    if (confirm("ATTENZIONE: Questa azione cancellerà DEFINITIVAMENTE tutti i tuoi dati, i pasti registrati e le attività. Sei sicura?")) {
+      await resetEntireProfile();
+      alert("Tutti i dati sono stati cancellati. L'app verrà ricaricata.");
+      window.location.href = "/";
+    }
   };
 
   if (!profile) return null;
@@ -186,6 +194,18 @@ export default function SettingsPage() {
             <span className="text-xl font-medium text-earth-dark">{nutrition.protein_target_g} g/giorno</span>
           </div>
         </div>
+      </section>
+
+      <section className="mt-4 mb-8">
+        <button 
+          onClick={handleReset}
+          className="w-full py-4 text-earth font-semibold text-sm border border-earth/20 rounded-2xl hover:bg-earth/5 transition-colors"
+        >
+          Reset Totale Dati
+        </button>
+        <p className="text-[10px] text-charcoal-muted text-center mt-2 px-6">
+          Questa azione è irreversibile. Tutti i pasti, le attività e le impostazioni del profilo verranno eliminati localmente e dal cloud.
+        </p>
       </section>
     </div>
   );
