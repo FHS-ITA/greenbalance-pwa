@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import VitalBattery from "@/components/ui/VitalBattery";
 import SatietyIndicator from "@/components/ui/SatietyIndicator";
 import SocraticToast from "@/components/ui/SocraticToast";
+import SocraticFeedback from "@/components/ui/SocraticFeedback";
 import { useAppState } from "@/components/AppProviders";
 import { getUserProfile, getLogsForDate, deleteNutritionLog } from "@/lib/db/dexie";
 import { computeNutritionProfile } from "@/lib/nutrition/calculator";
@@ -120,6 +121,13 @@ export default function DashboardPage() {
           />
         </div>
         <p className="text-xs text-charcoal-muted mt-2 text-right">La barra scura indica l'apporto proteico</p>
+        
+        <div className="mt-6">
+          <SocraticFeedback 
+            calories={{ consumed: consumedCalories, target: nutrition.tdee }}
+            protein={{ consumed: consumedProtein, target: nutrition.protein_target_g }}
+          />
+        </div>
       </section>
 
       {/* Somatic Status */}

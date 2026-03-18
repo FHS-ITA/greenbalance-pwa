@@ -5,6 +5,7 @@ import { useAppState } from "@/components/AppProviders";
 import { db, addNutritionLog, getUserProfile } from "@/lib/db/dexie";
 import { parseLabelFromImage } from "@/lib/ai/ocr-label-parser";
 import { getAIInsight } from "@/lib/ai/conversational";
+import { estimateFoodMetrics } from "@/lib/ai/nutrition-estimator";
 import type { MealType, FoodItem, NutritionLog, LabelAnalysis } from "@/lib/db/types";
 
 export default function LogPage() {
@@ -16,14 +17,53 @@ export default function LogPage() {
   const [totalProtein, setTotalProtein] = useState(0);
   const [notes, setNotes] = useState("");
   const [isScanning, setIsScanning] = useState(false);
+  const [isEstimating, setIsEstimating] = useState(false);
   const [scanResult, setScanResult] = useState<LabelAnalysis | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const addFood = () => {
+  const addFood = async () => {
     if (!currentFoodName) return;
-    setFoods([...foods, { name: currentFoodName, quantity_g: 100 }]);
+    const name = currentFoodName;
     setCurrentFoodName("");
+    setIsEstimating(true);
+
+    try {
+      const estimated = await estimateFoodMetrics(name);
+      const newFoods = [...foods, estimated];
+      setFoods(newFoods);
+      
+      // Update totals based on AI estimate
+      const newCal = newFoods.reduce((acc, f) => acc + (f.calories || 0), 0);
+      const newProt = newFoods.reduce((acc, f) => acc + (f.protein_g || 0), 0);
+      setTotalCalories(Math.round(newCal));
+      setTotalProtein(Math.round(newProt));
+    } catch (err) {
+      setFoods([...foods, { name, quantity_g: 100 }]);
+    } finally {
+      setIsEstimating(false);
+    }
+  };
+
+  const updateFoodQuantity = (index: number, grams: number) => {
+    const newFoods = [...foods];
+    const food = newFoods[index];
+    const ratio = grams / (food.quantity_g || 100);
+    
+    newFoods[index] = {
+      ...food,
+      quantity_g: grams,
+      calories: food.calories ? Math.round(food.calories * ratio) : 0,
+      protein_g: food.protein_g ? food.protein_g * ratio : 0,
+      carbs_g: food.carbs_g ? food.carbs_g * ratio : 0,
+      fat_g: food.fat_g ? food.fat_g * ratio : 0,
+    };
+    
+    setFoods(newFoods);
+    
+    // Sync totals
+    setTotalCalories(Math.round(newFoods.reduce((acc, f) => acc + (f.calories || 0), 0)));
+    setTotalProtein(Math.round(newFoods.reduce((acc, f) => acc + (f.protein_g || 0), 0)));
   };
 
   const handleScan = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -194,15 +234,43 @@ export default function LogPage() {
             onChange={(e) => setCurrentFoodName(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && addFood()}
           />
-          <button className="gb-btn-primary px-4 py-2" onClick={addFood}>+</button>
+          <button 
+            className="gb-btn-primary px-4 py-2 disabled:opacity-50" 
+            onClick={addFood}
+            disabled={isEstimating}
+          >
+            {isEstimating ? "..." : "+"}
+          </button>
         </div>
 
         {foods.length > 0 && (
-          <ul className="space-y-1 mt-1">
+          <ul className="space-y-2 mt-2">
             {foods.map((f, i) => (
-              <li key={i} className="flex justify-between items-center text-sm py-1 border-b border-sage/10 last:border-0">
-                <span className="text-charcoal">{f.name}</span>
-                <button className="text-earth text-xl" onClick={() => setFoods(foods.filter((_, idx) => idx !== i))}>&times;</button>
+              <li key={i} className="flex flex-col gap-1 py-2 border-b border-sage/10 last:border-0">
+                <div className="flex justify-between items-center">
+                  <span className="text-charcoal font-medium">{f.name}</span>
+                  <button className="text-earth text-xl leading-none" onClick={() => {
+                    const next = foods.filter((_, idx) => idx !== i);
+                    setFoods(next);
+                    setTotalCalories(Math.round(next.reduce((acc, food) => acc + (food.calories || 0), 0)));
+                    setTotalProtein(Math.round(next.reduce((acc, food) => acc + (food.protein_g || 0), 0)));
+                  }}>&times;</button>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1">
+                    <input 
+                      type="number" 
+                      className="w-16 bg-white/50 border border-sage/20 rounded px-1 text-sm text-charcoal"
+                      value={f.quantity_g}
+                      onChange={(e) => updateFoodQuantity(i, parseInt(e.target.value) || 0)}
+                    />
+                    <span className="text-xs text-charcoal-muted">g</span>
+                  </div>
+                  <div className="text-xs text-sage-dark flex gap-2">
+                    <span>{Math.round(f.calories || 0)} kcal</span>
+                    <span>{f.protein_g?.toFixed(1)}g prot</span>
+                  </div>
+                </div>
               </li>
             ))}
           </ul>

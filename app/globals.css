@@ -12,7 +12,7 @@
   --gb-primary:     #B2AC88;
   --gb-primary-d:   #8F8A68;
   --gb-text:        #333333;
-  --gb-muted:       #888888;
+  --gb-muted:       #555555;
   --gb-warning:     #CCAA22;
   --gb-error:       #8B5E3C;
   --gb-border:      rgba(178,172,136,0.25);
@@ -106,10 +106,10 @@ body {
 .gb-subheading {
   font-weight: 500;
   color: var(--gb-muted);
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
 }
 .gb-label {
-  font-weight: 600;
+  font-weight: 700;
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
