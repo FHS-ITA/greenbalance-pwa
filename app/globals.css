@@ -1,0 +1,217 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
+
+/* ============================================================
+   GreenBalance — Global CSS
+   Palette: Crema #FFFDD0 | Salvia #B2AC88 | Antracite #333333
+   DIVIETO: nessun uso del rosso (#FF0000 o varianti)
+   ============================================================ */
+
+:root {
+  --gb-bg:          #FFFDD0;
+  --gb-primary:     #B2AC88;
+  --gb-primary-d:   #8F8A68;
+  --gb-text:        #333333;
+  --gb-muted:       #888888;
+  --gb-warning:     #CCAA22;
+  --gb-error:       #8B5E3C;
+  --gb-border:      rgba(178,172,136,0.25);
+  --gb-card:        rgba(255,253,208,0.85);
+  --gb-glass:       rgba(255,253,208,0.6);
+
+  /* iOS safe area */
+  --safe-top:    env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left:   env(safe-area-inset-left, 0px);
+  --safe-right:  env(safe-area-inset-right, 0px);
+
+  /* Navigation height */
+  --nav-height: calc(64px + var(--safe-bottom));
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Outfit', system-ui, sans-serif;
+  background-color: var(--gb-bg);
+  color: var(--gb-text);
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--gb-primary);
+  border-radius: 4px;
+}
+
+/* Focus visible */
+:focus-visible {
+  outline: 2px solid var(--gb-primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Selection */
+::selection {
+  background-color: rgba(178,172,136,0.3);
+  color: var(--gb-text);
+}
+
+/* ============================================================
+   Card & Glass utilities
+   ============================================================ */
+.gb-card {
+  background: var(--gb-card);
+  border: 1px solid var(--gb-border);
+  border-radius: 1.25rem;
+  box-shadow: 0 4px 24px 0 rgba(51,51,51,0.06);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.gb-glass {
+  background: var(--gb-glass);
+  border: 1px solid var(--gb-border);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* ============================================================
+   Typography
+   ============================================================ */
+.gb-heading {
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: var(--gb-text);
+}
+.gb-subheading {
+  font-weight: 500;
+  color: var(--gb-muted);
+  font-size: 0.875rem;
+}
+.gb-label {
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--gb-muted);
+}
+
+/* ============================================================
+   Buttons
+   ============================================================ */
+.gb-btn-primary {
+  background-color: var(--gb-primary);
+  color: white;
+  font-weight: 600;
+  border-radius: 9999px;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+.gb-btn-primary:hover {
+  background-color: var(--gb-primary-d);
+  box-shadow: 0 4px 12px rgba(178,172,136,0.4);
+}
+.gb-btn-primary:active {
+  transform: scale(0.97);
+}
+
+.gb-btn-ghost {
+  background: transparent;
+  color: var(--gb-primary-d);
+  font-weight: 500;
+  border-radius: 9999px;
+  padding: 0.75rem 1.5rem;
+  border: 1.5px solid var(--gb-border);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+.gb-btn-ghost:hover {
+  background: rgba(178,172,136,0.1);
+  border-color: var(--gb-primary);
+}
+
+/* ============================================================
+   Main content area (avoids bottom nav)
+   ============================================================ */
+.gb-main {
+  padding-top: calc(var(--safe-top) + 1rem);
+  padding-bottom: var(--nav-height);
+  padding-left: 1rem;
+  padding-right: 1rem;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+/* ============================================================
+   Low Energy Mode
+   ============================================================ */
+[data-low-energy="true"] .gb-low-energy-hide {
+  display: none !important;
+}
+[data-low-energy="true"] .gb-card {
+  box-shadow: none;
+}
+
+/* ============================================================
+   Shimmer skeleton
+   ============================================================ */
+.gb-skeleton {
+  background: linear-gradient(90deg,
+    rgba(178,172,136,0.1) 25%,
+    rgba(178,172,136,0.2) 50%,
+    rgba(178,172,136,0.1) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s linear infinite;
+  border-radius: 0.5rem;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* ============================================================
+   Animations
+   ============================================================ */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in  { animation: fade-in 0.4s ease-out; }
+.animate-slide-up { animation: slide-up 0.35s ease-out; }
